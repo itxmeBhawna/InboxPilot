@@ -1,39 +1,85 @@
-"""User preferences memory handler for storing and retrieving learned user rules."""
+"""User preferences memory handler for calculating sender statistics and preference rules."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from collections import Counter
+from typing import Any, Dict, Optional
+
 from src.config.settings import Settings, get_settings
+from src.memory.feedback_memory import FeedbackMemory
 
 logger = logging.getLogger(__name__)
 
 
 class UserPreferencesMemory:
-    """Manages learned user preferences such as sender priorities and handling rules.
+    """Manages sender preference aggregation and statistics calculated from user feedback history."""
 
-    Privacy Note: Only stores abstract preference rules (e.g. sender whitelist/blacklist rules
-    or priority preferences), never raw email bodies or confidential message contents.
-    """
-
-    def __init__(self, settings: Optional[Settings] = None) -> None:
-        """Initialize user preferences memory client with settings.
+    def __init__(
+        self,
+        feedback_memory: Optional[FeedbackMemory] = None,
+        settings: Optional[Settings] = None,
+    ) -> None:
+        """Initialize user preferences memory client.
 
         Args:
-            settings: Application settings instance (defaults to global settings).
+            feedback_memory: FeedbackMemory component instance for querying history.
+            settings: Global application settings instance.
         """
         self.settings = settings or get_settings()
-        # TODO: Initialize Firestore collection reference or local cache for user preferences
+        self.feedback_memory = feedback_memory or FeedbackMemory(settings=self.settings)
 
-    async def get_user_preferences(self, user_id: str = "default") -> Dict[str, Any]:
-        """Retrieve stored user preferences and custom triage rules.
+    def get_sender_preferences(self, sender: str) -> Dict[str, Any]:
+        """Analyze historical feedback entries for a sender and compute preference statistics.
 
         Args:
-            user_id: Unique identifier for the user profile.
+            sender: Target sender email address.
 
         Returns:
-            Dict containing preferred priority rules, sender preferences, and category rules.
+            Dict containing preferred_priority, confidence score, and total feedback_count.
         """
-        # TODO: Query Firestore user_preferences collection for user_id
-        logger.info("Fetching user preferences for user: %s", user_id)
+        history = self.feedback_memory.get_feedback_history(sender=sender)
+        feedback_count = len(history)
+
+        if not feedback_count:
+            return {
+                "preferred_priority": None,
+                "confidence": 0.0,
+                "feedback_count": 0,
+            }
+
+        # Count frequencies of user-corrected priorities
+        priorities = [
+            str(rec.get("user_priority")).upper()
+            for rec in history
+            if rec.get("user_priority")
+        ]
+
+        if not priorities:
+            return {
+                "preferred_priority": None,
+                "confidence": 0.0,
+                "feedback_count": feedback_count,
+            }
+
+        counts = Counter(priorities)
+        top_priority, top_count = counts.most_common(1)[0]
+        confidence = round(top_count / feedback_count, 2)
+
+        logger.info(
+            "Computed preferences for sender '%s': preferred=%s, confidence=%.2f, count=%d",
+            sender,
+            top_priority,
+            confidence,
+            feedback_count,
+        )
+
+        return {
+            "preferred_priority": top_priority,
+            "confidence": confidence,
+            "feedback_count": feedback_count,
+        }
+
+    async def get_user_preferences(self, user_id: str = "default") -> Dict[str, Any]:
+        """Retrieve overall user preference profile."""
         return {
             "preferred_priority_handling": {},
             "sender_preferences": {},
@@ -43,20 +89,9 @@ class UserPreferencesMemory:
     async def set_sender_preference(
         self, sender: str, category: str, priority: str, user_id: str = "default"
     ) -> bool:
-        """Record or update a user rule for a specific sender address.
-
-        Args:
-            sender: Email address of the sender.
-            category: Preferred category assignment.
-            priority: Preferred priority assignment.
-            user_id: Target user profile identifier.
-
-        Returns:
-            Boolean indicating success of operation.
-        """
-        # TODO: Implement Firestore update for sender rules
+        """Record or update an explicit preference rule for a sender address."""
         logger.info(
-            "Setting rule for sender %s -> category: %s, priority: %s (user: %s)",
+            "Set rule for sender %s -> category: %s, priority: %s (user: %s)",
             sender,
             category,
             priority,
