@@ -11,8 +11,13 @@ from google.genai import types
 from pydantic import ValidationError
 
 from src.agent.exceptions import InvalidAgentOutputError
-from src.agent.prompts import EMAIL_ANALYSIS_SYSTEM_PROMPT, EMAIL_ANALYSIS_USER_PROMPT
+from src.agent.prompts import (
+    EMAIL_ANALYSIS_SYSTEM_PROMPT,
+    EMAIL_ANALYSIS_USER_PROMPT,
+    USER_PREFERENCE_CONTEXT,
+)
 from src.config.settings import Settings, get_settings
+from src.memory.memory_service import MemoryService
 from src.models.email_models import (
     CategoryEnum,
     EmailClassification,
@@ -34,15 +39,18 @@ class InboxAgent:
     def __init__(
         self,
         settings: Optional[Settings] = None,
+        memory_service: Optional[MemoryService] = None,
         client: Optional[Any] = None,
     ) -> None:
-        """Initialize the InboxAgent with model configuration and Gemini client.
+        """Initialize the InboxAgent with model configuration, memory service, and Gemini client.
 
         Args:
             settings: Global application settings instance.
+            memory_service: Optional MemoryService component for sender preference queries.
             client: Optional injected Gemini client (useful for unit testing/mocking).
         """
         self.settings = settings or get_settings()
+        self.memory_service = memory_service or MemoryService(settings=self.settings)
         self.client = client
 
         if self.client is None and self.settings.gemini_api_key:
@@ -70,6 +78,30 @@ class InboxAgent:
                 "Gemini API client is not initialized. Please configure GEMINI_API_KEY."
             )
 
+        pref_context_str = ""
+        preference_context_used = False
+
+        if self.memory_service:
+            try:
+                stats = self.memory_service.get_sender_preferences(email.sender)
+                if stats and stats.get("feedback_count", 0) > 0:
+                    pref_context_str = "\n" + USER_PREFERENCE_CONTEXT.format(
+                        preferred_priority=stats.get("preferred_priority", "N/A"),
+                        confidence=stats.get("confidence", 0.0),
+                        feedback_count=stats.get("feedback_count", 0),
+                    )
+                    preference_context_used = True
+                    logger.info(
+                        "Injecting preference context for sender '%s' (feedback_count: %d, preferred: %s)",
+                        email.sender,
+                        stats.get("feedback_count"),
+                        stats.get("preferred_priority"),
+                    )
+            except Exception as err:
+                logger.warning(
+                    "Failed to query sender preferences for email ID %s: %s", email.id, err
+                )
+
         prompt = EMAIL_ANALYSIS_USER_PROMPT.format(
             email_id=email.id,
             sender=email.sender,
@@ -77,6 +109,7 @@ class InboxAgent:
             subject=email.subject,
             received_at=email.received_at.isoformat() if email.received_at else "",
             labels=", ".join(email.labels) if email.labels else "None",
+            preference_context=pref_context_str,
             body=email.body,
         )
 
@@ -110,10 +143,12 @@ class InboxAgent:
                 )
                 time.sleep(2.0)
 
-        return self._parse_and_validate_response(email, raw_text)
+        return self._parse_and_validate_response(
+            email, raw_text, preference_context_used=preference_context_used
+        )
 
     def _parse_and_validate_response(
-        self, email: EmailMessage, raw_text: str
+        self, email: EmailMessage, raw_text: str, preference_context_used: bool = False
     ) -> TriageResult:
         """Parse raw text response from Gemini and validate against structured schema.
 
@@ -249,6 +284,7 @@ class InboxAgent:
             classification=classification,
             draft_reply=draft_reply,
             synced_to_notion=False,
+            preference_context_used=preference_context_used,
         )
 
     async def classify_email(

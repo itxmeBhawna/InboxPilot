@@ -35,8 +35,8 @@ class EmailTriageWorkflow:
         """
         self.settings = settings or get_settings()
         self.gmail = gmail_service or GmailService(settings=self.settings)
-        self.agent = agent or InboxAgent(settings=self.settings)
         self.memory = memory_service or MemoryService(settings=self.settings)
+        self.agent = agent or InboxAgent(settings=self.settings, memory_service=self.memory)
         self.notion = notion_service or NotionService(settings=self.settings)
 
     def process_latest_unread_email(

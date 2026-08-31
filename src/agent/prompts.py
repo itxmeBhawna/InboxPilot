@@ -52,7 +52,19 @@ Recipient: {recipient}
 Subject: {subject}
 Received At: {received_at}
 Labels: {labels}
-
+{preference_context}
 --- EMAIL CONTENT ---
 {body}
+"""
+
+USER_PREFERENCE_CONTEXT = """--- SENDER PREFERENCE HISTORY ---
+Preferred Priority: {preferred_priority}
+Confidence: {confidence:.2f}
+Feedback Count: {feedback_count}
+
+Instructions for Preference Context:
+- Consider this sender preference history as advisory supporting context.
+- Do NOT blindly follow or force overrides based on this context.
+- Use it only if it appears relevant to the current email.
+- The current email content remains the primary source of truth.
 """

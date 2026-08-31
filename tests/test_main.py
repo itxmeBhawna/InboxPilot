@@ -58,3 +58,24 @@ def test_user_feedback_model():
     assert feedback.user_category == CategoryEnum.NEWSLETTER
     assert feedback.feedback_reason == "Sender always sends automated weekly updates."
     assert isinstance(feedback.created_at, datetime)
+
+
+def test_feedback_endpoint():
+    """Verify POST /feedback endpoint records feedback and returns success."""
+    payload = {
+        "email_id": "test_msg_999",
+        "sender": "test@example.com",
+        "subject": "Test Email",
+        "predicted_priority": "MEDIUM",
+        "user_priority": "HIGH",
+        "predicted_category": "PROMOTION",
+        "user_category": "ACTION_REQUIRED",
+        "feedback_reason": "Testing feedback submission endpoint.",
+    }
+    response = client.post("/feedback", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "success"
+    assert data["record"]["email_id"] == "test_msg_999"
+    assert data["record"]["user_priority"] == "HIGH"
+

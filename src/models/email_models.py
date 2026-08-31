@@ -104,6 +104,9 @@ class TriageResult(BaseModel):
     draft_id: Optional[str] = Field(
         default=None, description="Gmail Draft ID if created"
     )
+    preference_context_used: bool = Field(
+        default=False, description="Whether historical user preference context was supplied to Gemini"
+    )
     processed_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         description="Timestamp when triage completed",
