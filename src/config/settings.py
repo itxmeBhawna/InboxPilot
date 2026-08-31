@@ -10,8 +10,8 @@ class Settings(BaseSettings):
     # Application Configuration
     app_name: str = "InboxPilot"
     app_env: str = "development"
-    host: str = "127.0.0.1"
-    port: int = 8000
+    host: str = "0.0.0.0"
+    port: int = 8080
     log_level: str = "INFO"
 
     # Google Gemini & ADK Configuration
