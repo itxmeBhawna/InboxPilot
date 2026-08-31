@@ -41,11 +41,11 @@ class EmailTriageWorkflow:
 
     def process_latest_unread_email(
         self,
-    ) -> Optional[Tuple[EmailMessage, TriageResult]]:
-        """Fetch the latest unread email from Gmail and analyze it using InboxAgent.
+    ) -> Optional[Tuple[EmailMessage, TriageResult, Optional[str]]]:
+        """Fetch the latest unread email, analyze it via InboxAgent, and sync to Notion.
 
         Returns:
-            Tuple of (EmailMessage, TriageResult) if an unread email was processed, or None.
+            Tuple of (EmailMessage, TriageResult, Optional[page_id]) if an email was processed, or None.
         """
         logger.info("Fetching latest unread email for triage workflow...")
         email = self.gmail.get_latest_unread_email()
@@ -55,7 +55,21 @@ class EmailTriageWorkflow:
 
         logger.info("Analyzing email ID %s via InboxAgent...", email.id)
         triage_result = self.agent.analyze_email(email)
-        return email, triage_result
+
+        page_id: Optional[str] = None
+        try:
+            page_id = self.notion.create_email_record(email, triage_result)
+            if page_id:
+                triage_result.synced_to_notion = True
+                logger.info("Synced email ID %s to Notion page %s", email.id, page_id)
+        except Exception:
+            logger.exception(
+                "Failed to create Notion record for email ID %s", email.id
+            )
+            triage_result.synced_to_notion = False
+            page_id = None
+
+        return email, triage_result, page_id
 
     async def triage_single_email(self, email: EmailMessage) -> TriageResult:
         """Process a single email through AI evaluation pipeline.
