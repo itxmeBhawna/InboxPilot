@@ -57,6 +57,9 @@ class EmailClassification(BaseModel):
         ..., ge=0.0, le=100.0, description="Estimated probability or score of spam or scam (0.0 to 100.0)"
     )
     reasoning: str = Field(..., description="Detailed explanation behind the classification")
+    reply_needed: bool = Field(
+        default=False, description="Whether an email response/reply is needed"
+    )
 
 
 class UserFeedback(BaseModel):
@@ -94,6 +97,12 @@ class TriageResult(BaseModel):
     )
     synced_to_notion: bool = Field(
         default=False, description="Whether record was written to Notion dashboard"
+    )
+    draft_created: bool = Field(
+        default=False, description="Whether a Gmail draft reply was created"
+    )
+    draft_id: Optional[str] = Field(
+        default=None, description="Gmail Draft ID if created"
     )
     processed_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),

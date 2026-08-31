@@ -3,6 +3,7 @@
 import json
 import logging
 import re
+import time
 from typing import Any, Dict, Optional
 
 from google import genai
@@ -85,18 +86,29 @@ class InboxAgent:
             response_mime_type="application/json",
         )
 
-        try:
-            response = self.client.models.generate_content(
-                model=self.settings.gemini_model,
-                contents=prompt,
-                config=config,
-            )
-            raw_text = response.text if hasattr(response, "text") and response.text else ""
-        except Exception as err:
-            logger.error("Gemini API call failed for email ID %s: %s", email.id, err)
-            raise InvalidAgentOutputError(
-                f"Gemini API request execution failed: {err}"
-            ) from err
+        raw_text = ""
+        for attempt in range(3):
+            try:
+                response = self.client.models.generate_content(
+                    model=self.settings.gemini_model,
+                    contents=prompt,
+                    config=config,
+                )
+                raw_text = response.text if hasattr(response, "text") and response.text else ""
+                break
+            except Exception as err:
+                if attempt == 2:
+                    logger.error("Gemini API call failed for email ID %s: %s", email.id, err)
+                    raise InvalidAgentOutputError(
+                        f"Gemini API request execution failed: {err}"
+                    ) from err
+                logger.warning(
+                    "Gemini API attempt %d failed for email ID %s: %s. Retrying in 2s...",
+                    attempt + 1,
+                    email.id,
+                    err,
+                )
+                time.sleep(2.0)
 
         return self._parse_and_validate_response(email, raw_text)
 
@@ -208,7 +220,11 @@ class InboxAgent:
         reasoning = str(data["reasoning"]).strip()
         reply_needed = bool(data["reply_needed"])
         raw_draft = data.get("draft_reply")
-        draft_reply = str(raw_draft).strip() if reply_needed and raw_draft else None
+        draft_reply = (
+            str(raw_draft).strip()
+            if raw_draft and str(raw_draft).strip() and str(raw_draft).strip().lower() != "none"
+            else None
+        )
 
         try:
             classification = EmailClassification(
@@ -217,6 +233,7 @@ class InboxAgent:
                 summary=summary,
                 spam_score=spam_score,
                 reasoning=reasoning,
+                reply_needed=reply_needed,
             )
         except ValidationError as err:
             logger.error(

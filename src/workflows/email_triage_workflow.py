@@ -69,6 +69,28 @@ class EmailTriageWorkflow:
             triage_result.synced_to_notion = False
             page_id = None
 
+        if (
+            triage_result.classification.reply_needed
+            and triage_result.draft_reply
+            and triage_result.draft_reply.strip()
+        ):
+            try:
+                draft_id = self.gmail.create_draft_reply(
+                    email, triage_result.draft_reply
+                )
+                if draft_id:
+                    triage_result.draft_created = True
+                    triage_result.draft_id = draft_id
+                    logger.info(
+                        "Created Gmail draft ID %s for email ID %s", draft_id, email.id
+                    )
+            except Exception:
+                logger.exception(
+                    "Failed to create Gmail draft for email ID %s", email.id
+                )
+                triage_result.draft_created = False
+                triage_result.draft_id = None
+
         return email, triage_result, page_id
 
     async def triage_single_email(self, email: EmailMessage) -> TriageResult:

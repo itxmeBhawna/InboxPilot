@@ -5,6 +5,7 @@ import logging
 import os
 import re
 from datetime import datetime, timezone
+from email.mime.text import MIMEText
 from typing import List, Optional
 
 from google.auth.transport.requests import Request
@@ -143,18 +144,76 @@ class GmailService:
 
         return email_messages
 
-    def create_draft(self, email_id: str, reply_body: str) -> Optional[str]:
-        """Create a reply draft in Gmail for an email thread.
+    def create_draft_reply(
+        self, original_email: EmailMessage, draft_body: str
+    ) -> Optional[str]:
+        """Create a reply draft in Gmail for an email message.
 
         Args:
-            email_id: ID of the original message being replied to.
-            reply_body: Text content for the draft reply.
+            original_email: Original EmailMessage being responded to.
+            draft_body: Body text for the reply draft.
 
         Returns:
-            Draft ID string if created successfully.
+            Gmail Draft ID string if created successfully.
+
+        Raises:
+            Exception: If Gmail API draft creation fails.
         """
+        logger.info("Creating Gmail draft reply for email ID %s", original_email.id)
+        if not draft_body or not draft_body.strip():
+            logger.warning(
+                "Draft body is empty for email ID %s. Skipping draft creation.",
+                original_email.id,
+            )
+            return None
+
+        service = self.get_service()
+        user_id = self.settings.gmail_user_id
+
+        # Prepare MIME message
+        mime_msg = MIMEText(draft_body, "plain", "utf-8")
+        mime_msg["To"] = original_email.sender
+
+        subject = original_email.subject or ""
+        if not subject.lower().startswith("re:"):
+            subject = f"Re: {subject}"
+        mime_msg["Subject"] = subject
+
+        mime_msg["In-Reply-To"] = original_email.id
+        mime_msg["References"] = original_email.id
+
+        raw_bytes = mime_msg.as_bytes()
+        raw_encoded = base64.urlsafe_b64encode(raw_bytes).decode("utf-8")
+
+        body = {
+            "message": {
+                "raw": raw_encoded,
+                "threadId": original_email.thread_id,
+            }
+        }
+
+        try:
+            draft = service.users().drafts().create(userId=user_id, body=body).execute()
+            draft_id = draft.get("id")
+            logger.info(
+                "Successfully created Gmail draft ID %s for email ID %s",
+                draft_id,
+                original_email.id,
+            )
+            return draft_id
+        except Exception as err:
+            logger.error(
+                "Failed to create Gmail draft for email ID %s: %s",
+                original_email.id,
+                err,
+            )
+            raise
+
+    def create_draft(self, email_id: str, reply_body: str) -> Optional[str]:
+        """Backward compatible helper to create a reply draft by email ID."""
         logger.info("Creating Gmail draft reply for email ID %s", email_id)
-        return None
+        email = self._fetch_email_by_id(email_id)
+        return self.create_draft_reply(email, reply_body)
 
     def _fetch_email_by_id(self, msg_id: str) -> EmailMessage:
         """Helper to fetch and parse full message content by ID."""
