@@ -86,24 +86,6 @@ InboxPilot provides a **fully integrated, preference-aware autonomous agent**:
 
 ---
 
-## 📸 Interface Preview
-
-<!-- DASHBOARD SCREENSHOT PLACEHOLDER -->
-<!-- Insert main InboxPilot React Dashboard screenshot here -->
-![InboxPilot Dashboard](https://via.placeholder.com/1200x675.png?text=InboxPilot+Autonomous+Monitoring+%26+Email+Triage+Dashboard)
-*InboxPilot Autonomous Dashboard displaying triaged email details, urgency badges, integration status, and reply draft preview.*
-
-<!-- FEEDBACK CORRECTION PLACEHOLDER -->
-<!-- Insert Feedback Submission Form screenshot here -->
-![Feedback Correction Panel](https://via.placeholder.com/1200x400.png?text=User+Feedback+Correction+%26+Preference+Learning+Panel)
-*Human-in-the-Loop Feedback Submission panel for recording priority and category corrections.*
-
-<!-- NOTION DASHBOARD PLACEHOLDER -->
-<!-- Insert Notion Database Screenshot here -->
-![Notion Database Sync](https://via.placeholder.com/1200x500.png?text=Notion+Database+Workspace+Synchronization)
-*Notion workspace database automatically synchronized with email classifications, priorities, summaries, and draft status.*
-
----
 
 ## 🛠️ Tech Stack
 
