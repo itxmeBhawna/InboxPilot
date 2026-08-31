@@ -39,6 +39,13 @@ InboxPilot was built specifically to demonstrate Google AI technologies, agentic
 - 🎨 **Provides a modern React dashboard** with real-time autonomous monitoring indicators and a 15-second auto-poll toggle.
 
 ---
+## Live Deployment
+
+Backend Health Endpoint:
+
+https://inboxpilot-git-670118578173.asia-south1.run.app/health
+
+Status: Deployed on Google Cloud Run
 
 ## 🚨 Problem Statement
 
