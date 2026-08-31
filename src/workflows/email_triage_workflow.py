@@ -91,6 +91,13 @@ class EmailTriageWorkflow:
                 triage_result.draft_created = False
                 triage_result.draft_id = None
 
+        # Mark processed message as read to prevent duplicate processing in future polling cycles
+        try:
+            read_marked = self.gmail.mark_as_read(email.id)
+            logger.info("mark_as_read execution result for email ID %s: %s", email.id, read_marked)
+        except Exception:
+            logger.exception("Failed to mark email ID %s as read", email.id)
+
         return email, triage_result, page_id
 
     async def triage_single_email(self, email: EmailMessage) -> TriageResult:

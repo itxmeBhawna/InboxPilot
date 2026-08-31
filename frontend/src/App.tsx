@@ -8,9 +8,9 @@ import {
   Copy,
   Database,
   FileEdit,
-  Inbox,
   Mail,
   MessageSquare,
+  Radio,
   RefreshCw,
   Send,
   ShieldAlert,
@@ -39,6 +39,10 @@ export const App: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Auto-poll and timestamp state
+  const [autoPoll, setAutoPoll] = useState<boolean>(false);
+  const [lastCheckedTime, setLastCheckedTime] = useState<string>(new Date().toLocaleTimeString());
+
   // Feedback form state
   const [userPriority, setUserPriority] = useState<string>('HIGH');
   const [userCategory, setUserCategory] = useState<string>('ACTION_REQUIRED');
@@ -60,6 +64,7 @@ export const App: React.FC = () => {
       }
       const json: EmailTriageData = await response.json();
       setData(json);
+      setLastCheckedTime(new Date().toLocaleTimeString());
 
       if (json.unread) {
         if (json.priority) setUserPriority(json.priority);
@@ -76,6 +81,16 @@ export const App: React.FC = () => {
   useEffect(() => {
     fetchLatestEmail();
   }, []);
+
+  useEffect(() => {
+    let interval: any;
+    if (autoPoll) {
+      interval = setInterval(() => {
+        fetchLatestEmail();
+      }, 15000);
+    }
+    return () => clearInterval(interval);
+  }, [autoPoll]);
 
   const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -220,23 +235,52 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {/* Empty Inbox State */}
+        {/* Empty Inbox State / Autonomous Monitoring Active */}
         {!loading && data && !data.unread && (
-          <div className="glass-panel rounded-2xl p-12 text-center border border-slate-800 space-y-4 max-w-xl mx-auto my-12">
-            <div className="p-4 bg-slate-900/80 rounded-full w-16 h-16 mx-auto flex items-center justify-center border border-slate-800">
-              <Inbox className="w-8 h-8 text-emerald-400" />
+          <div className="glass-panel rounded-2xl p-10 text-center border border-slate-800 space-y-6 max-w-xl mx-auto my-8 glow-border-indigo">
+            <div className="relative p-4 bg-indigo-500/10 rounded-full w-20 h-20 mx-auto flex items-center justify-center border border-indigo-500/30">
+              <Radio className="w-10 h-10 text-indigo-400 animate-pulse" />
+              <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-slate-950 animate-ping" />
             </div>
-            <h2 className="text-xl font-bold text-slate-100">Inbox Zero</h2>
-            <p className="text-slate-400 text-sm">
-              No unread emails found in your connected Gmail account. All emails have been processed!
-            </p>
-            <button
-              onClick={fetchLatestEmail}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg border border-slate-700 transition"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Check Again
-            </button>
+
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                Autonomous Monitoring Active
+              </div>
+              <h2 className="text-xl font-bold text-slate-100 mt-1">No New Unread Emails Found</h2>
+              <p className="text-slate-400 text-xs mt-2 leading-relaxed">
+                InboxPilot is actively watching your connected Gmail inbox. When a new email arrives, it will automatically triage, classify, sync to Notion, and generate draft replies.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <button
+                onClick={() => {
+                  fetchLatestEmail();
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow-md shadow-indigo-600/20 transition cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Check Now
+              </button>
+
+              <button
+                onClick={() => setAutoPoll(!autoPoll)}
+                className={`inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl border transition cursor-pointer ${
+                  autoPoll
+                    ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
+                }`}
+              >
+                <Zap className="w-3.5 h-3.5" />
+                {autoPoll ? 'Auto-Poll (15s): ON' : 'Auto-Poll: OFF'}
+              </button>
+            </div>
+
+            <div className="text-[11px] text-slate-500 font-mono pt-2 border-t border-slate-900">
+              Last Checked: {lastCheckedTime}
+            </div>
           </div>
         )}
 
@@ -486,7 +530,7 @@ export const App: React.FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-500">
-        InboxPilot Phase 6A — Autonomous AI Agent System
+        InboxPilot — Autonomous AI Email Triage Assistant
       </footer>
     </div>
   );

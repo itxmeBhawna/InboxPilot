@@ -130,6 +130,24 @@ class InboxAgent:
                 raw_text = response.text if hasattr(response, "text") and response.text else ""
                 break
             except Exception as err:
+                err_str = str(err)
+                if "RESOURCE_EXHAUSTED" in err_str or "429" in err_str or "Quota exceeded" in err_str:
+                    logger.warning(
+                        "Gemini API rate limit reached for email ID %s: %s. Using fallback classification.",
+                        email.id,
+                        err,
+                    )
+                    raw_text = json.dumps({
+                        "category": "OTHER",
+                        "priority": "MEDIUM",
+                        "spam_score": 0.0,
+                        "summary": email.snippet or email.subject,
+                        "reasoning": "Fallback classification generated due to transient Gemini API rate limit.",
+                        "reply_needed": False,
+                        "draft_reply": None,
+                    })
+                    break
+
                 if attempt == 2:
                     logger.error("Gemini API call failed for email ID %s: %s", email.id, err)
                     raise InvalidAgentOutputError(

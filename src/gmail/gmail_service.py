@@ -99,6 +99,7 @@ class GmailService:
         service = self.get_service()
         user_id = self.settings.gmail_user_id
 
+        logger.info("Querying Gmail API for unread emails (userId=%s, q='is:unread')", user_id)
         response = (
             service.users()
             .messages()
@@ -108,10 +109,11 @@ class GmailService:
 
         messages = response.get("messages", [])
         if not messages:
-            logger.info("No unread emails found.")
+            logger.info("No unread emails found in Gmail query.")
             return None
 
         msg_id = messages[0]["id"]
+        logger.info("Retrieved latest unread Gmail message ID: %s", msg_id)
         return self._fetch_email_by_id(msg_id)
 
     def fetch_unread_emails(self, max_results: int = 10) -> List[EmailMessage]:
@@ -214,6 +216,30 @@ class GmailService:
         logger.info("Creating Gmail draft reply for email ID %s", email_id)
         email = self._fetch_email_by_id(email_id)
         return self.create_draft_reply(email, reply_body)
+
+    def mark_as_read(self, email_id: str) -> bool:
+        """Remove UNREAD label from a message to mark it as read.
+
+        Args:
+            email_id: Gmail message ID string.
+
+        Returns:
+            Boolean indicating whether the operation succeeded.
+        """
+        logger.info("Executing mark_as_read for Gmail message ID: %s", email_id)
+        try:
+            service = self.get_service()
+            user_id = self.settings.gmail_user_id
+            api_res = service.users().messages().modify(
+                userId=user_id,
+                id=email_id,
+                body={"removeLabelIds": ["UNREAD"]},
+            ).execute()
+            logger.info("Successfully marked message ID %s as read. Gmail API Response: %s", email_id, api_res)
+            return True
+        except Exception as err:
+            logger.error("Failed to mark message ID %s as read: %s", email_id, err)
+            return False
 
     def _fetch_email_by_id(self, msg_id: str) -> EmailMessage:
         """Helper to fetch and parse full message content by ID."""

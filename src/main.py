@@ -4,7 +4,7 @@ import logging
 from typing import Optional
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -67,13 +67,14 @@ async def health_check():
 
 @app.get("/emails/latest", tags=["Triage"])
 @app.get("/api/emails/latest", tags=["Triage"])
-async def get_latest_email():
+async def get_latest_email(response: Response):
     """Fetch and process the latest unread email via EmailTriageWorkflow."""
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     logger.info("Fetching latest unread email via API endpoint...")
     try:
         res = workflow_service.process_latest_unread_email()
         if not res:
-            return {"unread": False, "message": "No unread emails found.", "email": None}
+            return {"unread": False, "message": "No new unread emails found", "email": None}
 
         email, triage_result, page_id = res
         classification = triage_result.classification
