@@ -1,13 +1,29 @@
 # InboxPilot — Autonomous AI Email Triage Assistant ✈️📧
 
-> **An autonomous, production-ready AI email triage assistant powered by Google Gemini 3.6 Flash, Gmail API, and Notion. InboxPilot continuously monitors incoming emails, evaluates urgency, generates reply drafts, synchronizes actionable workspace intelligence to Notion, and learns user preferences from feedback.**
+> **An autonomous, preference-aware AI email triage assistant powered by Google Gemini 3.6 Flash, Google GenAI SDK, Gmail API, and Notion. InboxPilot continuously monitors incoming emails, evaluates urgency, generates reply drafts, synchronizes actionable workspace intelligence to Notion, and learns user preferences from feedback.**
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-18+-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![Google Gemini](https://img.shields.io/badge/Google_Gemini-3.6_Flash-8E75B2?style=for-the-badge&logo=googlecloud&logoColor=white)](https://ai.google.dev)
+[![Google GenAI SDK](https://img.shields.io/badge/Google_GenAI_SDK-0.1.0+-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://pypi.org/project/google-genai/)
 [![Gmail API](https://img.shields.io/badge/Gmail_API-OAuth_2.0-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](https://developers.google.com/gmail/api)
 [![Notion API](https://img.shields.io/badge/Notion_API-Workspace_Sync-000000?style=for-the-badge&logo=notion&logoColor=white)](https://developers.notion.com)
+[![Google Cloud Run](https://img.shields.io/badge/Google_Cloud-Cloud_Run-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white)](https://cloud.google.com/run)
+
+---
+
+## 🏆 Hackathon Requirements Compliance
+
+InboxPilot was built specifically to demonstrate Google AI technologies, agentic architectures, and modern cloud deployment standards.
+
+| Component | Technology | Implementation & Usage Location |
+| :--- | :--- | :--- |
+| **AI Model** | **Google Gemini 3.6 Flash** | Core reasoning engine performing multi-dimensional classification, urgency scoring, spam detection, and reply draft generation. (`src/agent/inbox_agent.py`) |
+| **Google Agent Framework** | **Google GenAI SDK** (`google-genai`) | Official Python client library (`from google import genai`) used for structured JSON prompting, response parsing, and error fallback handling. (`src/agent/inbox_agent.py`) |
+| **Cloud Infrastructure** | **Google Cloud Run** | Intended production containerized deployment target for the FastAPI backend service and polling workflow. (`Dockerfile`, `src/main.py`) |
+| **Email Integration** | **Gmail API** | OAuth 2.0 message polling (`q="is:unread"`), read-marking (`removeLabelIds: ["UNREAD"]`), and Gmail Draft reply creation. (`src/gmail/gmail_service.py`) |
+| **Workspace Sync** | **Notion API** | Real-time database record creation mapping email metadata, summary, category, priority, and draft indicators. (`src/notion/notion_service.py`) |
 
 ---
 
@@ -15,7 +31,7 @@
 
 **InboxPilot** transforms email overload into an autonomous, self-improving workflow. Operating as a continuous background agent, InboxPilot:
 - 📩 **Monitors unread emails** via official Gmail OAuth 2.0 integration.
-- 🧠 **Classifies and prioritizes messages** across 9 categories and 3 priority levels using Google Gemini 3.6 Flash.
+- 🧠 **Classifies and prioritizes messages** across 9 categories and 3 priority levels using Google Gemini 3.6 Flash and the Google GenAI SDK.
 - ✍️ **Generates professional reply drafts** saved directly into Gmail Drafts for human review before sending.
 - 📊 **Synchronizes structured email records** into a live Notion workspace dashboard.
 - 🎓 **Learns user preferences** over time from manual feedback corrections without retraining models.
@@ -46,131 +62,138 @@ InboxPilot provides a **fully integrated, preference-aware autonomous agent**:
 
 ---
 
-## 🌐 Google Technologies Used
-
-InboxPilot leverages Google's AI and Developer Ecosystem:
-
-- 🧠 **Google Gemini 3.6 Flash**: The core AI reasoning engine powering multi-dimensional email classification, urgency scoring, spam detection, and reply draft composition using the latest `google-genai` Python SDK.
-- 📧 **Gmail API**: Handles secure email retrieval (`is:unread`), read marking (`removeLabelIds: ["UNREAD"]`), and automated reply draft creation inside the user's Gmail account.
-- 🔐 **Google Cloud OAuth 2.0**: Provides secure user authentication, token persistence (`token.json`), and automatic token refresh flows for production security.
-
----
-
 ## ✨ Features
 
-- 🔐 **Real Gmail OAuth 2.0 Integration**: Token persistence, automatic refresh, and message metadata parsing.
-- ⚡ **Gemini 3.6 Flash Reasoning Engine**: High-speed, structured JSON email classification and contextual reasoning output.
+- 🔐 **Real Gmail OAuth 2.0 Integration**: Secure credentials loading, token reuse, automatic refresh, and message metadata parsing.
+- ⚡ **Gemini 3.6 Flash Reasoning**: High-speed, structured JSON email classification powered by the official `google-genai` SDK.
 - 🏷️ **9-Category Classification**: `ACTION_REQUIRED`, `MEETING`, `APPLICATION`, `FINANCE`, `NEWSLETTER`, `PROMOTION`, `SPAM_SCAM`, `PERSONAL`, and `OTHER`.
 - 🚥 **3-Tier Urgency Scoring**: `HIGH`, `MEDIUM`, and `LOW` priority tags.
-- 🛡️ **Spam & Scam Risk Gauge**: 0%–100% risk scoring to isolate phishing attempts and fraudulent offers.
+- 🛡️ **Spam & Scam Detection**: 0%–100% risk scoring to isolate phishing attempts and fraudulent offers.
 - 📝 **Automated Reply Drafting**: Generates professional draft responses saved directly into Gmail Drafts.
-- 📓 **Notion Workspace Syncing**: Real-time property mapping to Notion database pages.
+- 📓 **Notion Workspace Sync**: Real-time property mapping to Notion database pages.
 - 🧠 **User Feedback Memory**: Persistent JSON storage (`data/feedback_memory.json`) capturing priority/category corrections.
-- 📊 **Preference-Aware Reasoner**: Injects sender preference statistics (`Preferred Priority`, `Confidence`, `Feedback Count`) as advisory context into Gemini prompts.
+- 📊 **Preference-Aware Reasoning**: Injects sender preference statistics (`Preferred Priority`, `Confidence`, `Feedback Count`) as advisory context into Gemini prompts.
 - 🔁 **Duplicate Processing Prevention**: Automatically marks processed Gmail messages as read to ensure idempotent execution.
-- 📡 **Autonomous Live Monitoring**: Real-time waiting card with interactive 15-second auto-polling toggle for live hackathon demos.
-- 🎨 **Glassmorphism React Dashboard**: Built with React 18, TypeScript, Vite, Tailwind CSS, and Lucide icons.
+- 📡 **Autonomous Monitoring Dashboard**: Real-time waiting card with interactive 15-second auto-polling toggle for live demos.
+- 👤 **Human-in-the-Loop Safety**: Mandatory manual review before any email is dispatched.
 
 ---
 
-## 🏗️ Architecture
+## 📸 Interface Preview
+
+<!-- DASHBOARD SCREENSHOT PLACEHOLDER -->
+<!-- Insert main InboxPilot React Dashboard screenshot here -->
+![InboxPilot Dashboard](https://via.placeholder.com/1200x675.png?text=InboxPilot+Autonomous+Monitoring+%26+Email+Triage+Dashboard)
+*InboxPilot Autonomous Dashboard displaying triaged email details, urgency badges, integration status, and reply draft preview.*
+
+<!-- FEEDBACK CORRECTION PLACEHOLDER -->
+<!-- Insert Feedback Submission Form screenshot here -->
+![Feedback Correction Panel](https://via.placeholder.com/1200x400.png?text=User+Feedback+Correction+%26+Preference+Learning+Panel)
+*Human-in-the-Loop Feedback Submission panel for recording priority and category corrections.*
+
+<!-- NOTION DASHBOARD PLACEHOLDER -->
+<!-- Insert Notion Database Screenshot here -->
+![Notion Database Sync](https://via.placeholder.com/1200x500.png?text=Notion+Database+Workspace+Synchronization)
+*Notion workspace database automatically synchronized with email classifications, priorities, summaries, and draft status.*
+
+---
+
+## 🛠️ Tech Stack
+
+| Category | Technology | Usage Description |
+| :--- | :--- | :--- |
+| **Frontend** | **React 18** + **TypeScript** + **Vite** | Dark-mode glassmorphic single-page web dashboard (`frontend/`) |
+| **Styling** | **Tailwind CSS** + **Lucide Icons** | Utility-first responsive design, glowing badges, and status icons |
+| **Backend** | **Python 3.11+** + **FastAPI** | High-performance ASGI REST API server (`src/main.py`) |
+| **AI Model** | **Google Gemini 3.6 Flash** | Advanced multi-dimensional email reasoning model |
+| **AI SDK** | **Google GenAI SDK** (`google-genai`) | Official Python client library for Gemini model interactions |
+| **Email Service** | **Gmail API (OAuth 2.0)** | Message querying, read marking, and Gmail draft creation |
+| **Productivity** | **Notion API** (`notion-client`) | Automated workspace database synchronization |
+| **Memory Store** | **Local Persistent JSON** | Feedback correction storage (`data/feedback_memory.json`) |
+| **Deployment Target** | **Google Cloud Run** | Intended production containerized cloud hosting architecture |
+| **Testing** | **Pytest** | Automated unit test suite (`tests/`) |
+
+---
+
+## 🏗️ Architecture Diagrams
+
+### Diagram 1: High-Level System Architecture
 
 ```mermaid
-graph TD
-    User([👤 User / Judge]) -->|Views Triage & Submits Feedback| ReactApp["🎨 React Frontend (Vite + TS + Tailwind)"]
-    ReactApp -->|HTTP REST API (Port 5173 -> 8000)| FastAPI["⚡ FastAPI Backend (src/main.py)"]
+flowchart TD
+    User([👤 User / Judge]) -->|Interacts via Browser| ReactApp["🎨 React Frontend (Vite + TS + Tailwind)"]
+    ReactApp -->|HTTP REST API Requests| CloudRun["☁️ Google Cloud Run / FastAPI (src/main.py)"]
     
-    subgraph "Core Workflow Orchestrator"
-        FastAPI -->|Invokes| Workflow["🔄 EmailTriageWorkflow"]
+    subgraph "Core Workflow Orchestration"
+        CloudRun -->|Invokes| Workflow["🔄 EmailTriageWorkflow"]
+        Workflow -->|Delegates Reasoning| Agent["🧠 InboxAgent"]
     end
     
-    subgraph "Integrations & Reasoning Layer"
+    subgraph "Reasoning & Integrations"
+        Agent -->|Google GenAI SDK| Gemini["🤖 Google Gemini 3.6 Flash"]
         Workflow -->|1. Fetch Unread Email| GmailAPI["📧 Gmail API (OAuth 2.0)"]
-        Workflow -->|2. Query Preference Stats| MemoryStore["🧠 Feedback Memory (data/feedback_memory.json)"]
-        Workflow -->|3. Analyze & Classify| Gemini["🧠 Google Gemini 3.6 Flash"]
-        Workflow -->|4. Create Database Record| NotionAPI["📓 Notion API"]
-        Workflow -->|5. Save Reply Draft| GmailAPI
-        Workflow -->|6. Mark Message Read| GmailAPI
+        Workflow -->|2. Read/Write History| MemoryStore[("🧠 Feedback Memory Store\ndata/feedback_memory.json")]
+        Workflow -->|3. Sync Database Record| NotionAPI["📓 Notion API"]
+        Workflow -->|4. Save Draft Reply| GmailAPI
+        Workflow -->|5. Mark Message Read| GmailAPI
     end
 
-    MemoryStore -->|Advisory History Context| Gemini
-    ReactApp -->|POST /feedback| FastAPI
-    FastAPI -->|Record User Correction| MemoryStore
+    MemoryStore -.->|Advisory Preference Context| Agent
+    ReactApp -->|POST /feedback| CloudRun
 ```
 
 ---
 
-## 🔄 Autonomous Agent Workflow
+### Diagram 2: End-to-End Email Lifecycle & Learning Loop
 
 ```mermaid
-sequenceDiagram
-    autonumber
-    actor User as 👤 User
-    participant App as 🎨 React Dashboard
-    participant API as ⚡ FastAPI Backend
-    participant WF as 🔄 EmailTriageWorkflow
-    participant Gmail as 📧 Gmail API
-    participant Mem as 🧠 Memory Service
-    participant Gemini as 🤖 Gemini 3.6 Flash
-    participant Notion as 📓 Notion API
-
-    App->>API: GET /emails/latest
-    API->>WF: process_latest_unread_email()
-    WF->>Gmail: get_latest_unread_email(q="is:unread")
-    
-    alt Unread Email Found
-        Gmail-->>WF: Return EmailMessage
-        WF->>Mem: get_sender_preferences(sender)
-        Mem-->>WF: Return Preference Stats
-        WF->>Gemini: analyze_email(email + advisory_context)
-        Gemini-->>WF: Return TriageResult JSON
-        
-        WF->>Notion: create_email_record(triage_result)
-        Notion-->>WF: Return Page ID
-        
-        opt reply_needed == True AND draft_reply present
-            WF->>Gmail: create_draft_reply(original_email, draft_text)
-            Gmail-->>WF: Return Draft ID
-        end
-        
-        WF->>Gmail: mark_as_read(email_id)
-        Gmail-->>WF: Confirm Label Modified (UNREAD removed)
-        WF-->>API: Return (EmailMessage, TriageResult, page_id)
-        API-->>App: JSON Response (unread=True, triage payload)
-    else No Unread Email
-        Gmail-->>WF: Return None
-        WF-->>API: Return None
-        API-->>App: JSON Response (unread=False, message="No new unread emails found")
-        App->>User: Render Autonomous Monitoring Active Card
-    end
-
-    opt User Submits Feedback Correction
-        User->>App: Select priority/category & submit
-        App->>API: POST /feedback (user_priority, user_category, rationale)
-        API->>Mem: record_feedback(...)
-        Mem-->>API: Saved to data/feedback_memory.json
-        API-->>App: 200 OK (✓ Feedback saved toast)
-    end
+flowchart LR
+    A["📩 New Gmail Email"] --> B["📥 Unread Retrieval (q='is:unread')"]
+    B --> C["🧠 Query Sender Preference History"]
+    C --> D["🤖 Gemini 3.6 Flash Reasoning"]
+    D --> E["🚥 Urgency & Priority Detection"]
+    E --> F["🏷️ Category Classification"]
+    F --> G["📝 Reply Draft Generation"]
+    G --> H["📓 Notion Workspace Sync"]
+    H --> I["✅ Mark Gmail Read (UNREAD removed)"]
+    I --> J["🎨 Dashboard Display"]
+    J --> K["👤 Human Review / Feedback"]
+    K --> L["💾 Preference Memory Updated"]
+    L -.->|Future Advisory Context| C
 ```
 
-### Why InboxPilot Qualifies as an Autonomous Agent
+---
 
-- 👁️ **Perceives Environment**: Continuously polls and inspects inbox state via Gmail API.
-- 🧠 **Reasons Contextually**: Synthesizes email text alongside historical sender preferences using Gemini 3.6 Flash.
-- 🎯 **Determines Goals**: Autonomously decides whether an email requires urgent attention, a reply draft, or silent filing.
-- ⚡ **Executes Multi-Step Actions**: Writes triaged records to Notion, creates Gmail drafts, and marks processed emails as read.
-- 🎓 **Adapts & Learns**: Remembers human corrections to personalize future predictions per sender.
-- 🛡️ **Operates Safely**: Never sends emails automatically — human review remains mandatory before dispatch.
+## 🤖 Autonomous Agent Behaviour
+
+InboxPilot operates strictly as an **autonomous agentic pipeline** following an Observe-Reason-Act loop:
+
+### 1. Inbox Monitoring & Retrieval
+The workflow periodically queries the Gmail API for unread messages (`q="is:unread"`). When a message is detected, metadata and body content are fetched for processing.
+
+### 2. Preference Querying & AI Reasoning
+Before querying Gemini, `InboxAgent` fetches historical sender correction statistics from the memory store. If feedback exists, sender statistics (`Preferred Priority`, `Confidence`, `Feedback Count`) are injected into the Gemini prompt as **advisory context**. Gemini 3.6 Flash evaluates the email and produces a structured JSON output containing category, priority, spam score, summary, and justification reasoning.
+
+### 3. Multi-Step Execution
+- **Notion Synchronization**: Creates a new database record in Notion populated with triage attributes.
+- **Gmail Reply Drafting**: If action is required and a reply is appropriate, a response draft is saved directly into the user's Gmail Drafts folder.
+- **Duplicate Prevention**: Calls `mark_as_read(email.id)` via Gmail API to remove the `UNREAD` label, guaranteeing the message is never reprocessed.
+
+### 4. Human-In-The-Loop & Memory Learning
+Users review triaged messages on the React dashboard. If a user submits a priority or category correction, the memory module records the feedback. Subsequent emails from that sender benefit from advisory preference context.
+
+> [!IMPORTANT]
+> **Safety Guarantee**: Response drafts are created in **Gmail Drafts** only. Emails are **NEVER** sent automatically. Human review and manual dispatch remain mandatory.
 
 ---
 
 ## 🎨 Frontend Web Dashboard
 
-The frontend application (`frontend/`) is a single-page dashboard built with **React 18**, **TypeScript**, **Vite**, and **Tailwind CSS**.
+The frontend application (`frontend/`) is a modern dashboard built with **React 18**, **TypeScript**, **Vite**, and **Tailwind CSS**.
 
-### Key UI Components
+### Key UI Features
 - **Glassmorphic Navigation Bar**: Brand identity, active AI status pill, and manual refresh trigger.
-- **Email Details Card**: Subject line, sender/recipient badges, and received date timestamp.
+- **Analyzed Email Card**: Subject line, sender/recipient badges, and received date timestamp.
 - **Triage Badges**: Color-coded category badge, 3-tier priority badge, and spam risk percentage meter.
 - **Integration Status Cards**: Live indicators for Notion Sync (`Synced`), Gmail Draft (`Draft Saved`), and Memory Preference (`Memory Context Used` vs `No Preference History`).
 - **AI Summary & Reasoning Accordion**: Concise summary block and expandable Gemini classification reasoning block.
@@ -180,18 +203,7 @@ The frontend application (`frontend/`) is a single-page dashboard built with **R
 
 ---
 
-## 💻 Tech Stack
-
-- **Backend Framework**: [Python 3.11+](https://python.org) | [FastAPI](https://fastapi.tiangolo.com) | [Pydantic v2](https://docs.pydantic.dev)
-- **Frontend Framework**: [React 18](https://react.dev) | [TypeScript](https://www.typescriptlang.org) | [Vite](https://vitejs.dev) | [Tailwind CSS](https://tailwindcss.com)
-- **AI Engine**: [Google Gemini 3.6 Flash](https://ai.google.dev) (`google-genai` SDK)
-- **Integrations**: [Google Gmail API](https://developers.google.com/gmail/api) | [Notion API](https://developers.notion.com) (`notion-client`)
-- **Memory & Storage**: Persistent local JSON (`data/feedback_memory.json`)
-- **Testing**: [Pytest](https://docs.pytest.org)
-
----
-
-## 📂 Project Structure
+## 📂 Repository Structure
 
 ```text
 InboxPilot/
@@ -251,17 +263,9 @@ InboxPilot/
 
 ---
 
-## ⚙️ Setup & Installation
+## ⚙️ Local Setup Instructions
 
-### 1. Prerequisites
-- **Python 3.11+**
-- **Node.js 18+** & **npm**
-- Google Cloud Project with Gmail API enabled
-- Notion Integration Secret & Database ID
-
----
-
-### 2. Clone & Virtual Environment Setup
+### 1. Environment & Virtual Env Setup
 
 ```powershell
 # Clone repository
@@ -280,14 +284,16 @@ source .venv/bin/activate
 
 ---
 
-### 3. Install Dependencies
+### 2. Install Backend Dependencies
 
-#### Backend Dependencies
 ```powershell
 pip install -r requirements.txt
 ```
 
-#### Frontend Dependencies
+---
+
+### 3. Install Frontend Dependencies
+
 ```powershell
 cd frontend
 npm install
@@ -327,51 +333,36 @@ NOTION_DATABASE_ID=your_notion_database_id_here
 
 ---
 
-### 5. Gmail OAuth 2.0 Credentials Setup
+### 5. Gmail OAuth Credentials Setup
 
 1. Open [Google Cloud Console](https://console.cloud.google.com/).
 2. Create a project and enable the **Gmail API**.
 3. Configure the **OAuth Consent Screen** (Desktop App).
 4. Create **OAuth 2.0 Client IDs** credentials.
-5. Download the credentials JSON file and save it as `credentials.json` in the project root directory.
-6. Upon initial run, a browser authentication window will launch. Authorize access, and `token.json` will be saved for automatic token re-use.
+5. Download credentials JSON and save as `credentials.json` in root directory.
+6. Initial execution will prompt browser OAuth login and generate `token.json`.
 
 ---
 
 ### 6. Notion Database Integration Setup
 
-1. Visit [Notion Integrations](https://www.notion.so/my-integrations) and create a new integration. Copy the key to `NOTION_API_KEY`.
-2. Create a database in Notion with the following schema:
-   - **Subject** (Title)
-   - **Sender** (Rich Text)
-   - **Category** (Select)
-   - **Priority** (Select)
-   - **Spam Score** (Number)
-   - **Reply Needed** (Checkbox)
-   - **Summary** (Rich Text)
-   - **Received At** (Date)
-3. Share the Notion database page with your integration.
-4. Copy the 32-character database ID into `NOTION_DATABASE_ID`.
+1. Open [Notion Integrations](https://www.notion.so/my-integrations) and create an integration. Copy secret to `NOTION_API_KEY`.
+2. Create a Notion database with properties: `Subject` (Title), `Sender` (Text), `Category` (Select), `Priority` (Select), `Spam Score` (Number), `Reply Needed` (Checkbox), `Summary` (Text), `Received At` (Date).
+3. Share database with integration and set `NOTION_DATABASE_ID`.
 
 ---
 
-## 🚀 Running the Application
+### 7. Running Backend & Frontend
 
-### Start FastAPI Backend Server
-
+#### Backend Server
 ```powershell
-# From project root directory
 .venv\Scripts\python.exe -m uvicorn src.main:app --port 8000 --reload
 ```
-- **Backend API Server**: `http://localhost:8000`
-- **Interactive Swagger Docs**: [`http://localhost:8000/docs`](http://localhost:8000/docs)
+- **Backend API**: `http://localhost:8000`
+- **Swagger Documentation**: [`http://localhost:8000/docs`](http://localhost:8000/docs)
 
----
-
-### Start React Frontend Development Server
-
+#### Frontend Server
 ```powershell
-# Open a second terminal window
 cd frontend
 npm run dev
 ```
@@ -379,31 +370,75 @@ npm run dev
 
 ---
 
-## 🚢 Deployment
+### 8. Running Automated Tests
 
-### Backend Deployment (Docker / Cloud Run / Railway)
-
-1. Build the production Docker image using the included Python 3.11 slim base:
-   ```bash
-   docker build -t inboxpilot-backend .
-   ```
-2. Run container exposing port 8000:
-   ```bash
-   docker run -p 8000:8000 --env-file .env inboxpilot-backend
-   ```
-3. Deploy to **GCP Cloud Run**, **Render**, or **Railway** by setting environment variables (`GEMINI_API_KEY`, `NOTION_API_KEY`, `NOTION_DATABASE_ID`, `GMAIL_CREDENTIALS_FILE`).
+```powershell
+pytest
+```
 
 ---
 
-### Frontend Deployment (Vercel / Netlify)
+## 🚢 Deployment Architecture
 
-1. Build the optimized production static bundle:
-   ```bash
-   cd frontend
-   npm run build
-   ```
-2. Deploy the generated `frontend/dist` directory to **Vercel**, **Netlify**, or **Cloudflare Pages**.
-3. Configure environment proxy / API route pointing `/emails` and `/feedback` requests to your deployed backend URL.
+InboxPilot is designed for containerized deployment on **Google Cloud Run**.
+
+### Intended Production Target: Google Cloud Run
+
+```dockerfile
+# Production Dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY src/ ./src/
+COPY data/ ./data/
+
+EXPOSE 8000
+
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+#### Deploying to Google Cloud Run:
+```bash
+# Build and submit image to Google Artifact Registry
+gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/inboxpilot-backend
+
+# Deploy container to Cloud Run
+gcloud run deploy inboxpilot-backend \
+    --image gcr.io/YOUR_PROJECT_ID/inboxpilot-backend \
+    --platform managed \
+    --region us-central1 \
+    --allow-unauthenticated \
+    --set-env-vars GEMINI_API_KEY=your_key,NOTION_API_KEY=your_notion_key,NOTION_DATABASE_ID=your_db_id
+```
+
+### Frontend Static Build Deployment
+
+```bash
+cd frontend
+npm run build
+```
+Deploy generated `frontend/dist` static assets to **Vercel**, **Netlify**, or **Cloudflare Pages**, configuring rewrite proxy rules for API routes.
+
+---
+
+## 🎥 Demo Walkthrough Checklist
+
+For video recordings and live judging demonstrations:
+
+- [x] **1. New Email Arrival**: Sender transmits an unread email to connected Gmail inbox.
+- [x] **2. AI Classification**: InboxPilot detects message, calling Gemini 3.6 Flash via `google-genai` SDK.
+- [x] **3. Gemini Reasoning**: AI outputs structured category, priority, spam risk, and reasoning.
+- [x] **4. Reply Draft Generation**: AI composes professional reply saved to Gmail Drafts.
+- [x] **5. Notion Workspace Sync**: Live record creation in Notion database.
+- [x] **6. Read Marking & Duplicate Prevention**: UNREAD label removed from Gmail message.
+- [x] **7. Dashboard Display**: React UI displays triage card, status badges, and draft preview.
+- [x] **8. Feedback Correction**: User submits priority/category correction on dashboard.
+- [x] **9. Preference Learning**: Subsequent email analysis demonstrates advisory memory context usage (`Memory Context Used` badge).
+- [x] **10. Autonomous Waiting State**: UI renders Autonomous Monitoring Active card with 15s auto-poll toggle.
 
 ---
 
