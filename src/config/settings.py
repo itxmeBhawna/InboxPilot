@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     # Google Gemini & ADK Configuration
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.6-flash"
 
     # Gmail API Configuration
     gmail_credentials_file: str = "credentials.json"
